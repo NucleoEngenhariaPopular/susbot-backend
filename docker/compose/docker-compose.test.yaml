@@ -1,0 +1,14 @@
+services:
+  user-api:
+    environment:
+      - POSTGRES_DB=test_db
+      - TEST_MODE=true
+    command: ["go", "test", "./..."]
+
+  address-api:
+    environment:
+      - POSTGRES_DB=test_db
+      - TEST_MODE=true
+    command: ["go", "test", "./..."]
+
+  # Test specific configurations...

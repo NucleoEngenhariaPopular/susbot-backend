@@ -1,0 +1,25 @@
+services:
+  gateway:
+    volumes:
+      - ../../gateway:/app  # For hot reloading
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=debug
+
+  user-api:
+    volumes:
+      - ../../services/user-api:/app
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=debug
+
+  # Add development tools
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "8086:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=admin@admin.com
+      - PGADMIN_DEFAULT_PASSWORD=admin
+
+  # More development specific services...

@@ -1,0 +1,36 @@
+services:
+  conversation-api:
+    restart: always
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    # env_file:
+    #   - .env
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://root:example@mongo:27017/
+      - MONGODB_NAME=my_database
+      - MONGODB_COLLECTION=conversations
+      - PORT=8082
+
+  mongo:
+    image: mongo
+    restart: always
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    # healthcheck:
+    #   test: [
+    #     "CMD", "mongo",
+    #     "--username", "root",
+    #     "--password", "example",
+    #     "--authenticationDatabase", "admin",
+    #     "--eval", "db.runCommand({ ping: 1 })"
+    #   ]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 5
+    #   start_period: 10s

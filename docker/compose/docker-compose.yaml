@@ -1,0 +1,160 @@
+services:
+  fluxo:
+    build:
+      context: ../../services/gateway/dockers/fluxo/
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  gateway:
+    build:
+      context: ../../services/gateway/
+      dockerfile: Dockerfile
+    env_file:
+      - ../environment/.env.development
+    depends_on:
+      - mongo
+      - postgres
+      - user-api
+      - address-api
+      - conversation-api
+    ports:
+      - 8080:8080
+    environment:
+      - USER_API_HOST=user-api
+      - USER_API_PORT=8080
+      - ADDRESS_API_HOST=address-api
+      - ADDRESS_API_PORT=8081
+      - CONVERSATION_API_HOST=conversation-api
+      - CONVERSATION_API_PORT=8082
+    restart: unless-stopped
+
+  conversation-api:
+    restart: unless-stopped
+    build:
+      context: ../../services/conversation-api/
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    env_file:
+      - ../environment/.env.development
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      - MONGO_URI=mongodb://root:example@mongo:27017/
+      - MONGODB_NAME=my_database
+      - MONGODB_COLLECTION=conversations
+      - PORT=8082
+
+  user-api:
+    restart: unless-stopped
+    build:
+      context: ../../services/user-api/
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    env_file:
+      - ../environment/.env.development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_PORT=5432
+      - PORT=8081
+
+  address-api:
+    restart: unless-stopped
+    build:
+      context: ../../services/address-api/
+      dockerfile: Dockerfile
+    ports:
+      - "8083:8083"
+    env_file:
+      - ../environment/.env.development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_PORT=5432
+      - PORT=8083
+
+  ngrok:
+    image: ngrok/ngrok
+    depends_on:
+      - fluxo
+      - gateway
+    ports:
+      - "4040:4040"
+    env_file:
+      - ../environment/.env.development
+    command:
+      - "http"
+      - "gateway:8080"
+
+  mongo:
+    image: mongo
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=example
+    healthcheck:
+      test: [
+        "CMD", "mongo",
+        "--username", "root",
+        "--password", "example",
+        "--authenticationDatabase", "admin",
+        "--eval", "db.runCommand({ ping: 1 })"
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+      # volumes:
+      # - ./docker/databases/mongodb/mongod.conf:/etc/mongod.conf
+      # - ./docker/databases/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+
+  postgres:
+    image: postgres:alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
+      # volumes:
+      # - ./docker/databases/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      # - ./docker/databases/postgres/init:/docker-entrypoint-initdb.d
+      # command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8085:8081"
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=example
+      - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongo:27017/
+      - ME_CONFIG_BASICAUTH=false
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8084:8080"  # Adminer runs on 8080 internally, we expose it on 8084
+    depends_on:
+      - postgres
