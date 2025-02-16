@@ -8,6 +8,7 @@ import (
 	"gateway/internal/utils"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -27,28 +28,58 @@ func NewHandler(cfg *config.Config) *Handler {
 }
 
 func (h *Handler) HandlePost(w http.ResponseWriter, r *http.Request) {
-	log.Println("Received message from WhatsApp")
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid method", http.StatusMethodNotAllowed)
 		return
 	}
 
+	log.Println("Received message from WhatsApp")
+
 	// Parse na mensagem da Twilio
 	twilioMessage, err := utils.ParseTwilioRequest(r)
 	if err != nil {
+		log.Printf("Error parsing Twilio request: %v", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// Salvar informação dos usuários
-	userData := models.UserData{
-		Msg: twilioMessage,
-	}
-	if err := h.userClient.SaveUser(userData); err != nil {
-		log.Printf("Error saving user: %v", err)
+	// Normalizando o numero (remover o prefix do WhatsApp)
+	phoneNumber := twilioMessage.From
+	phoneNumber = strings.TrimPrefix(phoneNumber, "whatsapp:")
+
+	// Deixando nome de usuario padrao se nao tiver
+	userName := twilioMessage.ProfileName
+	if userName == "" {
+		userName = phoneNumber
 	}
 
-	// Criar uma mensagem para salvar na conversa
+	// Create user data with available information
+	userData := models.UserData{
+		User: models.User{
+			Name:         userName,
+			CPF:          "PENDENTE",
+			DateOfBirth:  time.Now(),
+			PhoneNumber:  phoneNumber,
+			StreetName:   "Pendente",
+			StreetNumber: "S/N",
+			Complement:   "",
+			Neighborhood: "Pendente",
+			City:         "São Paulo",
+			State:        "SP",
+			CEP:          "00000000",
+		},
+		Msg: twilioMessage,
+	}
+
+	log.Printf("Attempting to save user data: %+v", userData)
+
+	if err := h.userClient.SaveUser(userData); err != nil {
+		log.Printf("Error saving user: %v", err)
+	} else {
+		log.Printf("Sucessfully saved user data")
+	}
+
+	// Criar uma mensagem para salvar na api-conversation
 	userMessage := models.Message{
 		UserID:    twilioMessage.AccountSid,
 		Sender:    twilioMessage.AccountSid,

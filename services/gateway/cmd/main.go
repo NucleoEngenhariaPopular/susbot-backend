@@ -6,6 +6,7 @@ import (
 
 	"gateway/internal/config"
 	"gateway/internal/handlers"
+	"gateway/internal/utils"
 )
 
 func main() {
@@ -14,6 +15,9 @@ func main() {
 
 	// Carregando as configs
 	cfg := config.Load()
+
+	// Check API connections
+	utils.CheckAPIConnections(cfg)
 
 	// Criando o Handler com os clients
 	handler := handlers.NewHandler(cfg)
@@ -29,3 +33,4 @@ func main() {
 		log.Fatalf("Error starting server: %v", err)
 	}
 }
+

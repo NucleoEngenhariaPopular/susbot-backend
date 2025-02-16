@@ -20,10 +20,101 @@ func HandleConversations(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		saveMessage(w, r)
 	case http.MethodGet:
+		if r.URL.Path == "/conversations/" {
+			getAllConversations(w, r)
+			return
+		}
 		getConversation(w, r)
 	default:
 		respondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
+}
+
+func getAllConversations(w http.ResponseWriter, r *http.Request) {
+	ctx := context.Background()
+	collection := database.GetCollection()
+
+	// Define the projection to only get ID and UserID
+	projection := bson.D{
+		{Key: "_id", Value: 1},
+		{Key: "user_id", Value: 1},
+		{Key: "start_time", Value: 1},
+		{Key: "end_time", Value: 1},
+	}
+
+	// Configure options for sorting by start_time in descending order
+	findOptions := options.Find().
+		SetProjection(projection).
+		SetSort(bson.D{{Key: "start_time", Value: -1}})
+
+	cursor, err := collection.Find(ctx, bson.M{}, findOptions)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Failed to fetch conversations")
+		return
+	}
+	defer cursor.Close(ctx)
+
+	type ConversationSummary struct {
+		ID        primitive.ObjectID `json:"id" bson:"_id"`
+		UserID    string             `json:"user_id" bson:"user_id"`
+		StartTime time.Time          `json:"start_time" bson:"start_time"`
+		EndTime   *time.Time         `json:"end_time,omitempty" bson:"end_time"`
+		Status    string             `json:"status"`
+	}
+
+	var conversations []ConversationSummary
+	for cursor.Next(ctx) {
+		var conv ConversationSummary
+		if err := cursor.Decode(&conv); err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Error decoding conversation")
+			return
+		}
+
+		// Determine conversation status
+		if conv.EndTime == nil {
+			conv.Status = "active"
+		} else {
+			conv.Status = "closed"
+		}
+
+		conversations = append(conversations, conv)
+	}
+
+	if err := cursor.Err(); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Error iterating conversations")
+		return
+	}
+
+	// Create response with string IDs
+	type ConversationResponse struct {
+		ID        string     `json:"id"`
+		UserID    string     `json:"user_id"`
+		StartTime time.Time  `json:"start_time"`
+		EndTime   *time.Time `json:"end_time,omitempty"`
+		Status    string     `json:"status"`
+	}
+
+	response := make([]ConversationResponse, len(conversations))
+	for i, conv := range conversations {
+		response[i] = ConversationResponse{
+			ID:        conv.ID.Hex(),
+			UserID:    conv.UserID,
+			StartTime: conv.StartTime,
+			EndTime:   conv.EndTime,
+			Status:    conv.Status,
+		}
+	}
+
+	respondWithJSON(w, http.StatusOK, models.APIResponse{
+		Success: true,
+		Data: struct {
+			TotalConversations int                    `json:"total_conversations"`
+			Conversations      []ConversationResponse `json:"conversations"`
+		}{
+			TotalConversations: len(conversations),
+			Conversations:      response,
+		},
+	})
 }
 
 func saveMessage(w http.ResponseWriter, r *http.Request) {

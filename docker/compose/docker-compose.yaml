@@ -21,13 +21,6 @@ services:
       - conversation-api
     ports:
       - 8080:8080
-    environment:
-      - USER_API_HOST=user-api
-      - USER_API_PORT=8080
-      - ADDRESS_API_HOST=address-api
-      - ADDRESS_API_PORT=8081
-      - CONVERSATION_API_HOST=conversation-api
-      - CONVERSATION_API_PORT=8082
     restart: unless-stopped
 
   conversation-api:
@@ -42,11 +35,6 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-    environment:
-      - MONGO_URI=mongodb://root:example@mongo:27017/
-      - MONGODB_NAME=my_database
-      - MONGODB_COLLECTION=conversations
-      - PORT=8082
 
   user-api:
     restart: unless-stopped
@@ -60,13 +48,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-      - POSTGRES_PORT=5432
-      - PORT=8081
 
   address-api:
     restart: unless-stopped
@@ -80,13 +61,6 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      - POSTGRES_HOST=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-      - POSTGRES_PORT=5432
-      - PORT=8083
 
   ngrok:
     image: ngrok/ngrok
@@ -144,13 +118,10 @@ services:
   mongo-express:
     image: mongo-express
     restart: always
+    env_file:
+      - ../environment/.env.development
     ports:
       - "8085:8081"
-    environment:
-      - ME_CONFIG_MONGODB_ADMINUSERNAME=root
-      - ME_CONFIG_MONGODB_ADMINPASSWORD=example
-      - ME_CONFIG_MONGODB_URL=mongodb://root:example@mongo:27017/
-      - ME_CONFIG_BASICAUTH=false
 
   adminer:
     image: adminer:latest

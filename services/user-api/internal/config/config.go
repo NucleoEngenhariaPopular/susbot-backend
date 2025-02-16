@@ -15,7 +15,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		Port:             getEnv("PORT", "8081"),
+		Port:             getEnv("USER_API_PORT", "8081"),
 		PostgresHost:     getEnv("POSTGRES_HOST", "localhost"),
 		PostgresUser:     getEnv("POSTGRES_USER", "postgres"),
 		PostgresPassword: getEnv("POSTGRES_PASSWORD", "postgres"),
@@ -32,4 +32,3 @@ func getEnv(key, fallback string) string {
 	}
 	return fallback
 }
-

@@ -11,7 +11,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		Port:            getEnv("PORT", "8082"),
+		Port:            getEnv("CONVERSATION_API_PORT", "8082"),
 		MongoURI:        getEnv("MONGO_URI", "mongodb://root:example@mongo:27017/"),
 		MongoDBName:     getEnv("MONGODB_NAME", "my_database"),
 		MongoCollection: getEnv("MONGODB_COLLECTION", "conversations"),

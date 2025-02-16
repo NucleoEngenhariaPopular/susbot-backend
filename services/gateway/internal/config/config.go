@@ -19,7 +19,7 @@ type Config struct {
 var Env *Config
 
 func Load() *Config {
-	return &Config{
+	Env = &Config{
 		Port:                getEnv("PORT", "8080"),
 		UserAPIHost:         getEnv("USER_API_HOST", "user-api"),
 		UserAPIPort:         getEnv("USER_API_PORT", "8080"),
@@ -30,6 +30,7 @@ func Load() *Config {
 		BOTKIT_URL:          getEnv("BOTKIT_URL", "http://fluxo:3000/api/messages"),
 		TWILIO_SID:          getEnv("TWILIO_SID", "XXXXXXXX"),
 	}
+	return Env
 }
 
 // Tenta pegar as variaveis de ambiente, se nao encontrar cai no callback

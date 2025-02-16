@@ -18,6 +18,12 @@ func HandleUsers(w http.ResponseWriter, r *http.Request) {
 		createUser(w, r)
 	case http.MethodGet:
 		path := strings.TrimPrefix(r.URL.Path, "/users/")
+
+		if path == "" {
+			getAllUsers(w, r)
+			return
+		}
+
 		if strings.HasPrefix(path, "cpf/") {
 			getUserByCPF(w, r)
 		} else {
@@ -272,6 +278,22 @@ func lookupTeamInfo(user models.User) (models.TeamInfo, error) {
 
 	log.Printf("Found team: %+v", teamInfo)
 	return *teamInfo, nil
+}
+
+func getAllUsers(w http.ResponseWriter, _ *http.Request) {
+	var users []models.User
+
+	result := database.GetDB().Find(&users)
+	if result.Error != nil {
+		log.Printf("Error fetching users: %v", result.Error)
+		respondWithError(w, http.StatusInternalServerError, "Failed to fetch users")
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, models.APIResponse{
+		Success: true,
+		Data:    users,
+	})
 }
 
 // Helper functions for response handling

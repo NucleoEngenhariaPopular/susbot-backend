@@ -44,8 +44,8 @@ setup:
 .PHONY: dev
 dev:
 	@echo "$(COLOR_GREEN)Starting development environment...$(COLOR_RESET)"
-	# @$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_DEV_FILE) up -d --build
 	@$(DOCKER_COMPOSE) -p susbot-backend -f $(DOCKER_COMPOSE_FILE) up -d --build
+	# @$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_DEV_FILE) up -d --build
 	# @./scripts/utils/health-check.sh
 
 .PHONY: stop

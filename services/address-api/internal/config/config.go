@@ -13,7 +13,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		Port:             getEnv("PORT", "8083"),
+		Port:             getEnv("ADDRESS_API_PORT", "8083"),
 		PostgresHost:     getEnv("POSTGRES_HOST", "localhost"),
 		PostgresUser:     getEnv("POSTGRES_USER", "postgres"),
 		PostgresPassword: getEnv("POSTGRES_PASSWORD", "postgres"),
