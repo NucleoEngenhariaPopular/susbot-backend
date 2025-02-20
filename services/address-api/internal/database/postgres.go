@@ -19,18 +19,18 @@ func InitDB(host, user, password, dbname, port string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to connect to database: %v", err)
 	}
 
-	// Enable trigram extension for fuzzy search
+	// Habilitando trigram
 	if err := db.Exec("CREATE EXTENSION IF NOT EXISTS pg_trgm;").Error; err != nil {
 		return nil, fmt.Errorf("failed to create trigram extension: %v", err)
 	}
 
-	// Run migrations
+	// Rodando as migracoes
 	err = db.AutoMigrate(&models.UBS{}, &models.Team{}, &models.StreetSegment{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to run migrations: %v", err)
 	}
 
-	// Create trigram index for street_name
+	// Criando trigrams para os nomes daas ruas
 	if err := db.Exec(`CREATE INDEX IF NOT EXISTS idx_street_segments_street_name_trgm 
         ON street_segments USING gin (street_name gin_trgm_ops);`).Error; err != nil {
 		return nil, fmt.Errorf("failed to create trigram index: %v", err)
@@ -44,4 +44,3 @@ func InitDB(host, user, password, dbname, port string) (*gorm.DB, error) {
 func GetDB() *gorm.DB {
 	return DB
 }
-

@@ -151,7 +151,7 @@ func deleteTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if team has any street segments
+	// Confere se um time possui segmentos de rua associado
 	var count int64
 	if err := database.GetDB().Model(&models.StreetSegment{}).Where("team_id = ?", id).Count(&count).Error; err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Failed to check team dependencies")

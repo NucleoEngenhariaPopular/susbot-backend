@@ -11,7 +11,7 @@ import (
 func main() {
 	cfg := config.Load()
 
-	// Initialize database
+	// Inicializar BD
 	_, err := database.InitDB(
 		cfg.PostgresHost,
 		cfg.PostgresUser,
@@ -23,10 +23,10 @@ func main() {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
 
-	// Initialize router
+	// Inicializar o router
 	mux := http.NewServeMux()
 
-	// Register handlers
+	// Registrando os Handlers
 	mux.HandleFunc("/ubs/", handlers.HandleUBS)
 	mux.HandleFunc("/teams/", handlers.HandleTeams)
 	mux.HandleFunc("/streets/", handlers.HandleStreetSegments)

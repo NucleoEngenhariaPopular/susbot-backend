@@ -15,7 +15,7 @@ type UBS struct {
 	Teams     []Team    `json:"teams,omitempty" gorm:"foreignKey:UBSID"`
 }
 
-// Team represents a medical team within a UBS
+// Um time dentro da UBS
 type Team struct {
 	ID        uint      `json:"id" gorm:"primaryKey"`
 	Name      string    `json:"name" gorm:"size:100;not null"`
@@ -25,7 +25,7 @@ type Team struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// StreetSegment represents a street segment assigned to a team
+// StreetSegment representa um segmento de rua que receberá um time
 type StreetSegment struct {
 	ID                 uint      `json:"id" gorm:"primaryKey"`
 	StreetName         string    `json:"street_name" gorm:"size:200;not null"`
@@ -36,15 +36,15 @@ type StreetSegment struct {
 	State              string    `json:"state" gorm:"size:2;not null"`
 	StartNumber        int       `json:"start_number"`
 	EndNumber          int       `json:"end_number"`
-	CEPPrefix          string    `json:"cep_prefix" gorm:"size:5"` // First 5 digits of CEP
-	EvenOdd            string    `json:"even_odd" gorm:"size:4"`   // 'even', 'odd', or 'all'
+	CEPPrefix          string    `json:"cep_prefix" gorm:"size:5"` // Primeiro 5 digitos do CEP
+	EvenOdd            string    `json:"even_odd" gorm:"size:4"`   // 'even', 'odd', ou 'all'
 	TeamID             uint      `json:"team_id" gorm:"not null"`
 	Team               Team      `json:"team,omitempty" gorm:"foreignKey:TeamID"`
 	CreatedAt          time.Time `json:"created_at"`
 	UpdatedAt          time.Time `json:"updated_at"`
 }
 
-// Request/Response structures
+// estruturas para Request/Response
 type CreateUBSRequest struct {
 	Name    string `json:"name" binding:"required"`
 	Address string `json:"address" binding:"required"`
@@ -89,4 +89,3 @@ type APIResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
 }
-

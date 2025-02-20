@@ -43,14 +43,14 @@ func createStreetSegment(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Verify if team exists
+	// Verifica se o time existe
 	var team models.Team
 	if err := database.GetDB().First(&team, req.TeamID).Error; err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid team ID")
 		return
 	}
 
-	// Normalize address components
+	// Normalizando componentes
 	normalizedStreetName := utils.NormalizeStreetName(req.StreetName)
 	normalizedStreetType := utils.NormalizeStreetType(req.StreetType)
 
@@ -68,7 +68,6 @@ func createStreetSegment(w http.ResponseWriter, r *http.Request) {
 		TeamID:             req.TeamID,
 	}
 
-	// Basic validation
 	if segment.StartNumber > segment.EndNumber {
 		respondWithError(w, http.StatusBadRequest, "Start number cannot be greater than end number")
 		return
@@ -123,17 +122,16 @@ func updateStreetSegment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verify if new team exists
+	// Verifica se o novo time existe
 	if err := database.GetDB().First(&models.Team{}, req.TeamID).Error; err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid team ID")
 		return
 	}
 
-	// Normalize address components
 	normalizedStreetName := utils.NormalizeStreetName(req.StreetName)
 	normalizedStreetType := utils.NormalizeStreetType(req.StreetType)
 
-	// Update fields
+	// Atualiza os campos
 	segment.StreetName = normalizedStreetName
 	segment.OriginalStreetName = req.StreetName
 	segment.StreetType = normalizedStreetType
@@ -146,7 +144,6 @@ func updateStreetSegment(w http.ResponseWriter, r *http.Request) {
 	segment.EvenOdd = strings.ToLower(req.EvenOdd)
 	segment.TeamID = req.TeamID
 
-	// Validate updated data
 	if segment.StartNumber > segment.EndNumber {
 		respondWithError(w, http.StatusBadRequest, "Start number cannot be greater than end number")
 		return
@@ -221,13 +218,12 @@ func isValidEvenOdd(value string) bool {
 }
 
 func findTeamByAddress(w http.ResponseWriter, r *http.Request) {
-	// Only accept GET requests
 	if r.Method != http.MethodGet {
 		respondWithError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
-	// Get query parameters
+	// Ve os parametros de busca
 	streetName := r.URL.Query().Get("street")
 	numberStr := r.URL.Query().Get("number")
 	city := r.URL.Query().Get("city")
@@ -238,29 +234,27 @@ func findTeamByAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Convert house number to int
+	// Conveter o numero da casa para int
 	number, err := strconv.Atoi(numberStr)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, "Invalid house number")
 		return
 	}
 
-	// Normalize the input
 	normalizedStreet := utils.NormalizeStreetName(streetName)
 	normalizedCity := strings.ToUpper(city)
 	normalizedState := strings.ToUpper(state)
 
 	var segments []models.StreetSegment
 
-	// Using similarity threshold of 0.3 (can be adjusted)
-	// First, find all potential matches in the same city and state
+	// Usando threshold de similaridade de 0.3 (da para ajustar)
+	// Primeiro, encontra todos os possiveis matches na mesma cidade e estado
 	db := database.GetDB().
 		Preload("Team").
 		Preload("Team.UBS").
 		Where("city = ? AND state = ?", normalizedCity, normalizedState).
 		Where("similarity(street_name, ?) > 0.3", normalizedStreet)
 
-	// Check number range and even/odd rules
 	db = db.Where(
 		"(start_number <= ? AND end_number >= ?) AND "+
 			"(even_odd = 'all' OR "+
@@ -278,7 +272,7 @@ func findTeamByAddress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Find the best match based on street name similarity
+	// Encontrar o melhor match baseado no nome da rua e similaridade
 	var bestMatch models.StreetSegment
 	bestSimilarity := -1.0
 
@@ -302,9 +296,9 @@ func findTeamByAddress(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Helper function to calculate string similarity
+// Calcular similiridade
 func calculateSimilarity(s1, s2 string) float64 {
-	// Count matching characters
+	// Contar quantos caracteres batem
 	matches := 0
 	s1Runes := []rune(s1)
 	s2Runes := []rune(s2)
@@ -315,7 +309,7 @@ func calculateSimilarity(s1, s2 string) float64 {
 		}
 	}
 
-	// Calculate similarity as a ratio
+	// Proporcao de similaridade
 	maxLen := float64(max(len(s1Runes), len(s2Runes)))
 	if maxLen == 0 {
 		return 0

@@ -33,20 +33,20 @@ func NormalizeStreetType(streetType string) string {
 }
 
 func NormalizeStreetName(name string) string {
-	// Remove extra spaces and convert to uppercase
+	// Remove espacos extras e deixa tudo em MAIUSCULO
 	name = strings.TrimSpace(strings.ToUpper(name))
 
-	// Remove accents
+	// Remove acentuacoes
 	name = removeAccents(name)
 
-	// Replace multiple spaces with single space
+	// Troca varios espacos por um unico
 	name = strings.Join(strings.Fields(name), " ")
 
 	return name
 }
 
 func NormalizeNumber(number string) string {
-	// Remove everything except digits
+	// Remove tudo menos digitos
 	var normalized strings.Builder
 	for _, r := range number {
 		if unicode.IsDigit(r) {
@@ -57,7 +57,7 @@ func NormalizeNumber(number string) string {
 }
 
 func NormalizeCEP(cep string) string {
-	// Remove everything except digits
+	// Remove tudo menos digitos
 	return NormalizeNumber(cep)
 }
 
@@ -90,7 +90,6 @@ func ExtractCEPPrefix(cep string) string {
 	return normalized
 }
 
-// ValidateEvenOdd checks if a number matches the even/odd rule
 func ValidateEvenOdd(number int, rule string) bool {
 	switch rule {
 	case "even":
